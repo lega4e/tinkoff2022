@@ -27,7 +27,7 @@ def command_mode(screen, cmdline: CmdLine):
   curses.curs_set(1)
   screen.move(h-1, 1)
 
-  inp = screen.getstr().decode()
+  inp = screen.getstr().decode().strip()
   p = inp.find(' ')
   if p >= 0:
     com = Command(inp[:p], inp[p+1:])
@@ -40,11 +40,18 @@ def command_mode(screen, cmdline: CmdLine):
     'quit' : Command.QUIT,
   }.get(com.command, Command.ERROR)
 
-  if com.command == Command.ERROR:
-    screen.addstr(h-1, 0, lefted_str(' Error', w))
+  if (
+    com.command == Command.ERROR or
+    ((com.command == Command.LOAD or com.command == Command.SAVE) and
+    com.arg is None)
+  ):
+    error = (' Error: unknown command'
+             if com.command == Command.ERROR else
+             ' Error: should be file name')
+    com.command = Command.ERROR
+    screen.addstr(h-1, 0, lefted_str(error, w))
 
   curses.noecho()
   curses.curs_set(0)
-  screen.getch()
 
   return com

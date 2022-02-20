@@ -1,4 +1,4 @@
-from utils import righted_str
+from utils import lefted_str, righted_str
 
 class CmdLine:
   def __init__(self):
@@ -16,4 +16,9 @@ class CmdLine:
   def tostr_hint(self, h, w):
     lines = [''] * h
     lines[-1] = ':' + righted_str(self.hint, w-1)
+    return '\n'.join(lines)
+
+  def answer(self, h, w, ans):
+    lines = [''] * h
+    lines[-1] = ' ' + lefted_str(ans, w-1)
     return '\n'.join(lines)

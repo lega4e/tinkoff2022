@@ -13,7 +13,11 @@ from sys     import stderr
 
 # init
 def main(height: int, width: int):
-  Game(height, width).run()
+  try:
+    Game(height, width).run()
+  except Exception as e:
+    print(e, file=stderr)
+    exit(1)
   exit(0)
 
 

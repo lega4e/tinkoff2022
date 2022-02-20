@@ -36,7 +36,7 @@ def generate_ships(h: int, w: int):
 class Board:
   HORIZONTAL_SIGNS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
   MAX_W = len(HORIZONTAL_SIGNS)
-  SHIP_SYM = '#'
+  SHIP_SYM = '■'
 
 
   def __init__(self, h: int, w: int, ships: [ int ] = None):
@@ -79,7 +79,7 @@ class Board:
         self._d[yy][x] = Board.SHIP_SYM
 
 
-  def _arrange_ship(self, ship: int):
+  def _arrange_ship(self, ship: int) -> bool:
     for i in range(20):
       y, x = randint(0, self.h-1), randint(0, self.w-1)
       hor = randint(0, 1)
@@ -95,13 +95,13 @@ class Board:
     for i in range(100):
       if all([ self._arrange_ship(ship) for ship in self.ships ]):
         return True
-    return False
+    raise Exception("Error: can't arrange ships; try to increase board size")
 
 
   def tostr(self):
     return '\n'.join(
       [ ' ' * len(str(self.h)) +
-        ' '.join(list(Board.HORIZONTAL_SIGNS[:self.w])) ] +
+        ' '.join(Board.HORIZONTAL_SIGNS[:self.w]) ] +
       [ '%*i' % (len(str(self.h)), y) + ' '.join(self._d[y-1])
         for y in range(1, self.h+1) ]
     )
