@@ -117,6 +117,6 @@ class Game:
   def _check_game_required_size(self):
     bh, bw = self.userboard.required_size()
     ch, cw = self.cmdln.required_size()
-    return bh + ch <= self.h and max(cw, bw*2 + 1) <= self.w
+    return bh + ch <= self.h and max(cw, bw*2 + 3) <= self.w
 
 

@@ -35,8 +35,14 @@ def generate_ships(h: int, w: int):
 
 class Board:
   HORIZONTAL_SIGNS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  MAX_W = len(HORIZONTAL_SIGNS)
-  SHIP_SYM = '■'
+  MAX_W            = len(HORIZONTAL_SIGNS)
+  SHIP             = '■'
+  HORIZONTAL       = '─'
+  VERTICAL         = '│'
+  TOPLEFT          = '┌'
+  TOPRIGHT         = '┐'
+  DOWNLEFT         = '└'
+  DOWNRIGHT        = '┘'
 
 
   def __init__(self, h: int, w: int, ships: [ int ] = None):
@@ -73,10 +79,10 @@ class Board:
   def place_ship(self, y: int, x: int, hor: bool, ship: int):
     if hor:
       for xx in range(x, x+ship):
-        self._d[y][xx] = Board.SHIP_SYM
+        self._d[y][xx] = Board.SHIP
     else:
       for yy in range(y, y+ship):
-        self._d[yy][x] = Board.SHIP_SYM
+        self._d[yy][x] = Board.SHIP
 
 
   def _arrange_ship(self, ship: int) -> bool:
@@ -99,13 +105,15 @@ class Board:
 
 
   def tostr(self):
+    hsl = len(str(self.h))
     return '\n'.join(
-      [ ' ' * len(str(self.h)) +
-        ' '.join(Board.HORIZONTAL_SIGNS[:self.w]) ] +
-      [ '%*i' % (len(str(self.h)), y) + ' '.join(self._d[y-1])
-        for y in range(1, self.h+1) ]
+      [ ' ' + ' ' * hsl + ' '.join(Board.HORIZONTAL_SIGNS[:self.w]) + ' '] +
+      [ ' ' * hsl + Board.TOPLEFT + Board.HORIZONTAL * (self.w * 2 - 1) + Board.TOPRIGHT ] +
+      [ '%*i' % (hsl, y) + Board.VERTICAL + ' '.join(self._d[y-1]) + Board.VERTICAL
+        for y in range(1, self.h+1) ] +
+      [ ' ' * hsl + Board.DOWNLEFT + Board.HORIZONTAL * (self.w * 2 - 1) + Board.DOWNRIGHT ]
     )
 
 
   def required_size(self):
-    return self.h + 1, len(str(self.h)) + self.w * 2
+    return self.h + 3, len(str(self.h)) + self.w * 2 + 2
