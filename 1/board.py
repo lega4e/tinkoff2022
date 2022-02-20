@@ -1,3 +1,7 @@
+import copy
+import curses
+
+from color  import Color
 from random import randint
 
 
@@ -36,7 +40,10 @@ def generate_ships(h: int, w: int):
 class Board:
   HORIZONTAL_SIGNS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
   MAX_W            = len(HORIZONTAL_SIGNS)
+  EMPTY            = ' '
   SHIP             = '■'
+  HURT             = 'X'
+  MISS             = '·'
   HORIZONTAL       = '─'
   VERTICAL         = '│'
   TOPLEFT          = '┌'
@@ -55,10 +62,19 @@ class Board:
 
 
   def clear(self):
-    self._d = [ [' '] * self.w for i in range(self.h) ]
+    self._d = [ [Board.EMPTY] * self.w for i in range(self.h) ]
 
 
-  def check_ship(self, y: int, x: int, hor: bool, ship: int) -> bool:
+  def arrange_ships(self, ships: [ int ]):
+    self.ships = sorted(ships, reverse=True)
+    self.clear()
+    for i in range(100):
+      if all([ self._arrange_ship(ship) for ship in self.ships ]):
+        return True
+    raise Exception("Error: can't arrange ships; try to increase board size")
+
+
+  def _check_ship(self, y: int, x: int, hor: bool, ship: int) -> bool:
     my = y if hor else y + ship - 1
     mx = x if not hor else x + ship - 1
     if x < 0 or mx >= self.w or y < 0 or my >= self.h:
@@ -70,7 +86,7 @@ class Board:
       for xx in range(x-1, mx+2):
         if xx >= self.w:
           break
-        if self._d[yy][xx] != ' ':
+        if self._d[yy][xx] != Board.EMPTY:
           return False
 
     return True
@@ -89,23 +105,90 @@ class Board:
     for i in range(20):
       y, x = randint(0, self.h-1), randint(0, self.w-1)
       hor = randint(0, 1)
-      if self.check_ship(y, x, hor, ship):
+      if self._check_ship(y, x, hor, ship):
         self.place_ship(y, x, hor, ship)
         return True
     return False
 
 
-  def arrange_ships(self, ships: [ int ]):
-    self.ships = sorted(ships, reverse=True)
-    self.clear()
-    for i in range(100):
-      if all([ self._arrange_ship(ship) for ship in self.ships ]):
-        return True
-    raise Exception("Error: can't arrange ships; try to increase board size")
+  def _is_kill(self, board, y, x):
+    if board[y][x] != Board.HURT:
+      return False
+    ways = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    for way in ways:
+      yy, xx = y, x
+      while yy >= 0 and yy < self.h and xx >= 0 and xx < self.w:
+        if (
+          board[yy][xx] == Board.SHIP or
+          (board[yy][xx] == Board.EMPTY and self._d[yy][xx] == Board.SHIP)
+        ):
+          return False
+        if board[yy][xx] != Board.HURT:
+          break
+        yy += way[0]
+        xx += way[1]
+    return True
 
 
-  def tostr(self):
+  def _translate_board(self, shots, hide):
+    board = copy.deepcopy(self._d)
+    for y, x in shots:
+      if board[y][x] == Board.EMPTY:
+        board[y][x] = Board.MISS
+      elif board[y][x] == Board.SHIP:
+        board[y][x] = Board.HURT
+
+    if hide:
+      for y in range(self.h):
+        for x in range(self.w):
+          if board[y][x] == Board.SHIP:
+            board[y][x] = Board.EMPTY
+
+    return board
+
+
+  def draw(
+    self,
+    screen,
+    y:     int,
+    x:     int,
+    shots: [(int, int)],
+    hide:  bool = False
+  ):
     hsl = len(str(self.h))
+    screen.addstr(
+      y, x, ' ' + ' ' * hsl + ' '.join(Board.HORIZONTAL_SIGNS[:self.w]) + ' '
+    )
+    screen.addstr(
+        y+1, x, ' ' * hsl + Board.TOPLEFT +
+              Board.HORIZONTAL * (self.w * 2 - 1) + Board.TOPRIGHT
+    )
+
+    board = self._translate_board(shots, hide)
+    for yy in range(self.h):
+      screen.addstr(y+2+yy, x, '%*i' % (hsl, yy+1) + Board.VERTICAL)
+      if Board.HURT not in board[yy]:
+        screen.addstr(y+2+yy, x+hsl+1, ' '.join(board[yy]))
+      else:
+        for xx in range(self.w):
+          if board[yy][xx] == Board.HURT and self._is_kill(board, yy, xx):
+            screen.addch(
+              y+2+yy, x+hsl+1+xx*2,
+              board[yy][xx],
+              curses.color_pair(Color.RED)
+            )
+          else:
+            screen.addch(y+2+yy, x+hsl+1+xx*2, board[yy][xx])
+      screen.addstr(y+2+yy, x+hsl+self.w*2, Board.VERTICAL)
+
+    screen.addstr(
+      y+2+self.h, x, ' ' * hsl + Board.DOWNLEFT +
+            Board.HORIZONTAL * (self.w * 2 - 1) + Board.DOWNRIGHT 
+    )
+    return
+
+
+  def tostr(self, shots: [(int, int)], hide: bool = False):
     return '\n'.join(
       [ ' ' + ' ' * hsl + ' '.join(Board.HORIZONTAL_SIGNS[:self.w]) + ' '] +
       [ ' ' * hsl + Board.TOPLEFT + Board.HORIZONTAL * (self.w * 2 - 1) + Board.TOPRIGHT ] +

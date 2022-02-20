@@ -1,7 +1,10 @@
 import curses
 import pickle
 
+from random import randint
+
 from board   import Board, generate_ships
+from color   import init_colors
 from command import Command, command_mode
 from cmdline import CmdLine
 from hello   import Hello
@@ -13,6 +16,7 @@ class Game:
     self.userboard = Board(height, width, ships)
     self.compboard = Board(height, width, ships)
     self.screen = self._make_screen()
+    init_colors()
     self.h, self.w = self.screen.getmaxyx(); self.w -= 1
     self.hello = Hello(height, width)
     self.cmdln = CmdLine()
@@ -89,13 +93,10 @@ class Game:
     if hspace % 3 > 0: hspaces[0] += 1
     if hspace % 3 > 1: hspaces[1] += 1
 
-    userboard = self.userboard.tostr().split('\n')
-    compboard = self.compboard.tostr().split('\n')
-    boards = '\n'.join([
-      ' ' * hspaces[0] + userboard[i] + ' ' * hspaces[1] + compboard[i]
-      for i in range(len(userboard))
-    ])
-    self.screen.addstr(vspaces[0], 0, boards)
+    shots = [ (randint(0, self.userboard.h-1), randint(0, self.userboard.w-1)) for i in range(200) ]
+    self.screen.clear()
+    self.userboard.draw(self.screen, vspaces[0], hspaces[0], shots, False)
+    self.compboard.draw(self.screen, vspaces[0], sum(hspaces[:2]) + bw, shots, True)
 
 
   def _make_screen(self):
