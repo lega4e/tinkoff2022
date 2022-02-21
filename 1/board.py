@@ -68,7 +68,7 @@ class Board:
   def arrange_ships(self, ships: [ int ]):
     self.ships = sorted(ships, reverse=True)
     self.clear()
-    for i in range(100):
+    for i in range(1000):
       if all([ self._arrange_ship(ship) for ship in self.ships ]):
         return True
     raise Exception("Error: can't arrange ships; try to increase board size")
@@ -92,7 +92,7 @@ class Board:
     return True
 
 
-  def place_ship(self, y: int, x: int, hor: bool, ship: int):
+  def _place_ship(self, y: int, x: int, hor: bool, ship: int):
     if hor:
       for xx in range(x, x+ship):
         self._d[y][xx] = Board.SHIP
@@ -102,11 +102,11 @@ class Board:
 
 
   def _arrange_ship(self, ship: int) -> bool:
-    for i in range(20):
+    for i in range(50):
       y, x = randint(0, self.h-1), randint(0, self.w-1)
       hor = randint(0, 1)
       if self._check_ship(y, x, hor, ship):
-        self.place_ship(y, x, hor, ship)
+        self._place_ship(y, x, hor, ship)
         return True
     return False
 
@@ -200,3 +200,11 @@ class Board:
 
   def required_size(self):
     return self.h + 3, len(str(self.h)) + self.w * 2 + 2
+
+
+  def board2screen(
+    self,
+    y: int, x: int,
+    winy: int = 0, winx: int = 0
+  ) -> (int, int):
+    return y + 2 + winy, x*2 + len(str(self.h)) + 1 + winx
