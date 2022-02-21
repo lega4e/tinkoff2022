@@ -14,6 +14,13 @@ def _mod(a: int, b: int) -> int:
   return (a + b) % b
 
 
+def _stack2num(stack: [int]) -> int:
+  val = 0
+  for digit in stack:
+    val = val * 10 + digit
+  return val
+
+
 class Game:
     def __init__(self, height, width):
       ships = generate_ships(height, width)
@@ -85,11 +92,14 @@ class Game:
     def run_game(self):
       usershots = []
       compshots = []
+      digitstack = []
       crsy, crsx = 0, 1
 
       while True:
         self.draw_screen(usershots, compshots, crsy, crsx)
+        self.screen.addstr(0, 0, str(digitstack))
         c = self.screen.getch()
+        savestack = False
         if c == curses.KEY_LEFT:
           crsx = _mod(crsx - 1, self.compboard.w)
         elif c == curses.KEY_RIGHT:
@@ -98,6 +108,22 @@ class Game:
           crsy = _mod(crsy - 1, self.compboard.h)
         elif c == curses.KEY_DOWN:
           crsy = _mod(crsy + 1, self.compboard.h)
+        elif ord('0') <= c <= ord('9'):
+          savestack = True
+          d = c - ord('0')
+          digitstack.append(d)
+          newy = _stack2num(digitstack) - 1
+          if newy >= self.userboard.h:
+            digitstack = [ d ]
+            newy = d - 1
+          if 0 <= newy < self.userboard.h:
+            crsy = newy
+        elif ord('a') <= c <= ord('z') or ord('A') <= c <= ord('Z'):
+          newx = c - (ord('a') if ord('a') <= c <= ord('z') else ord('A'))
+          if 0 <= newx < self.compboard.w:
+            crsx = newx
+        if not savestack:
+          digitstack.clear()
 
 
     def draw_screen(self, usershots, compshots, crsy, crsx):
