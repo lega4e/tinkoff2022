@@ -21,6 +21,11 @@ def _stack2num(stack: [int]) -> int:
   return val
 
 
+def fill_rectangle(screen, y, x, h, w, *, sym = ' '):
+  for yy in range(y, y+h):
+    screen.addstr(yy, x, sym * w)
+
+
 class Game:
     def __init__(self, height, width):
       ships = generate_ships(height, width)
@@ -40,6 +45,44 @@ class Game:
         raise Exception("Screen too small, try to increase screen size")
 
 
+    def execute_command(self, cmd: Command) -> bool:
+      'Return True if need to quit program'
+      if cmd.command == Command.QUIT:
+        curses.endwin()
+        return True
+      elif cmd.command == Command.LOAD:
+        try:
+          (
+            self.h, self.w,
+            self.userboard, self.compboard,
+            self.hello, self.cmdln
+          ) = pickle.load(open(cmd.arg, 'rb'))
+          self.screen.addstr(
+            self.h-1, 0,
+            self.cmdln.answer(1, self.w, 'Game loaded')
+          )
+        except Exception as e:
+          self.screen.addstr(
+            self.h-1, 0,
+            self.cmdln.answer(
+              1, self.w,
+              "Can't find file '%s' or invalid format" % cmd.arg
+            )
+          )
+      elif cmd.command == Command.SAVE:
+        pickle.dump((
+          self.h, self.w,
+          self.userboard, self.compboard,
+          self.hello, self.cmdln
+        ), open(cmd.arg, 'bw'))
+        self.screen.addstr(
+          self.h-1, 0,
+          self.cmdln.answer(1, self.w, 'Game saved')
+        )
+      return False
+
+
+
     def run(self):
       self.screen.addstr(0, 0, self.hello.tostr(self.h-1, self.w))
       self.screen.addstr(self.h-1, 0, self.cmdln.tostr_prompt(1, self.w))
@@ -52,41 +95,8 @@ class Game:
           curses.endwin()
           break
         elif key == ':':
-          com = command_mode(self.screen, self.cmdln)
-          if com.command == Command.QUIT:
-            curses.endwin()
+          if self.execute_command(command_mode(self.screen, self.cmdln)):
             break
-          elif com.command == Command.LOAD:
-            try:
-              (
-                self.h, self.w,
-                self.userboard, self.compboard,
-                self.hello, self.cmdln
-              ) = pickle.load(open(com.arg, 'rb'))
-              self.screen.addstr(
-                self.h-1, 0,
-                self.cmdln.answer(1, self.w, 'Game loaded')
-              )
-            except Exception as e:
-              self.screen.addstr(
-                self.h-1, 0,
-                self.cmdln.answer(
-                  1, self.w,
-                  "Can't find file '%s' or invalid format" % com.arg
-                )
-              )
-          elif com.command == Command.SAVE:
-            pickle.dump((
-              self.h, self.w,
-              self.userboard, self.compboard,
-              self.hello, self.cmdln
-            ), open(com.arg, 'bw'))
-            self.screen.addstr(
-              self.h-1, 0,
-              self.cmdln.answer(1, self.w, 'Game saved')
-            )
-
-      print('END GAME', flush=True)
 
 
     def run_game(self):
@@ -122,6 +132,15 @@ class Game:
           newx = c - (ord('a') if ord('a') <= c <= ord('z') else ord('A'))
           if 0 <= newx < self.compboard.w:
             crsx = newx
+        elif c == ord(' ') or c == ord('\n'):
+          usershots.append((crsy, crsx))
+        elif (
+          c == ord(':') and
+          self.execute_command(command_mode(self.screen, self.cmdln))
+        ):
+          break
+        self.screen.addstr(0, 0, str(c))
+
         if not savestack:
           digitstack.clear()
 
@@ -135,13 +154,13 @@ class Game:
       if hspace % 3 > 0: hspaces[0] += 1
       if hspace % 3 > 1: hspaces[1] += 1
 
-      self.screen.clear()
-
       self.userboard.draw(
          self.screen,
          vspaces[0], hspaces[0],
          compshots, False
       )
+
+      fill_rectangle(self.screen, vspaces[0], hspaces[0] + bw, bh, hspaces[1])
 
       self.compboard.draw(
          self.screen,
