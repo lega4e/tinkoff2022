@@ -9,6 +9,39 @@ class Ship:
     self.hor = hor
     self.live = live
 
+  def points(self):
+    y, x, = self.y, self.x
+    for i in range(self.l):
+      yield y, x
+      if self.hor:
+        x += 1
+      else:
+        y += 1
+
+
+  def bounds(self):
+    if self.hor:
+      for x in range(self.x-1, self.x+self.l+1):
+        yield self.y-1, x
+      yield self.y, self.x-1
+      yield self.y, self.x+self.l
+      for x in range(self.x-1, self.x+self.l+1):
+        yield self.y+1, x
+    else:
+      for y in range(self.y-1, self.y+self.l+1):
+        yield y, self.x-1
+      yield self.y-1, self.x
+      yield self.y+self.l, self.x
+      for y in range(self.y-1, self.y+self.l+1):
+        yield y, self.x+1
+
+
+  def __contains__(self, p: (int, int)) -> bool:
+    y, x = p
+    return (y == self.y and self.x <= x < self.x + self.l
+            if self.hor else
+            x == self.x and self.y <= y < self.y + self.l)
+
 
 def get_probs_val(weights: dict):
   choice = randint(1, sum(weights.keys()))

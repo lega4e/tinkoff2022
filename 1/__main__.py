@@ -8,6 +8,7 @@ from cmdline import CmdLine
 from game    import Game
 from hello   import Hello
 from sys     import stderr
+from itertools import product
 
 
 # init

@@ -1,16 +1,17 @@
 import curses
 import pickle
 
-from random import randint
-
-from board   import Board
-from cmdline import CmdLine
-from color   import Color, init_colors
-from command import Command, command_mode
-from copy    import deepcopy
-from hello   import Hello
-from ship    import Ship, generate_ships
-from status  import Status
+from random    import randint, shuffle
+from board     import Board
+from cmdline   import CmdLine
+from color     import Color,   init_colors
+from command   import Command, command_mode
+from copy      import deepcopy
+from hello     import Hello
+from itertools import product
+from ship      import Ship,    generate_ships
+from status    import Status
+from utils     import centered_str
 
 
 def _mod(a: int, b: int) -> int:
@@ -89,38 +90,41 @@ class Game:
       self.screen.addstr(0, 0, self.hello.tostr(self.h-1, self.w))
       self.screen.addstr(self.h-1, 0, self.cmdln.tostr_prompt(1, self.w))
       self.screen.keypad(True)
+      run = False
 
       while True:
-        key = self.screen.getkey()
-        if key == '\n':
+        if not run:
+          key = self.screen.getkey()
+        if run or key == '\n':
           self.run_game()
           curses.endwin()
           break
         elif key == ':':
-          if self.execute_command(command_mode(self.screen, self.cmdln)):
+          cmd = command_mode(self.screen, self.cmdln)
+          if self.execute_command(cmd):
             break
+          if cmd.command == Command.LOAD:
+            run = True
 
 
     def run_game(self):
-      usershots = []
-      compshots = []
       digitstack = []
       crsy, crsx = 0, 1
 
+      isover = False
       while True:
-        self.draw_screen(usershots, compshots, crsy, crsx)
-        self.screen.addstr(0, 0, str(digitstack))
+        self.draw_screen(crsy, crsx)
         c = self.screen.getch()
         savestack = False
-        if c == curses.KEY_LEFT:
+        if not isover and c == curses.KEY_LEFT:
           crsx = _mod(crsx - 1, self.compboard.w)
-        elif c == curses.KEY_RIGHT:
+        elif not isover and c == curses.KEY_RIGHT:
           crsx = _mod(crsx + 1, self.compboard.w)
-        elif c == curses.KEY_UP:
+        elif not isover and c == curses.KEY_UP:
           crsy = _mod(crsy - 1, self.compboard.h)
-        elif c == curses.KEY_DOWN:
+        elif not isover and c == curses.KEY_DOWN:
           crsy = _mod(crsy + 1, self.compboard.h)
-        elif ord('0') <= c <= ord('9'):
+        elif not isover and ord('0') <= c <= ord('9'):
           savestack = True
           d = c - ord('0')
           digitstack.append(d)
@@ -130,24 +134,31 @@ class Game:
             newy = d - 1
           if 0 <= newy < self.userboard.h:
             crsy = newy
-        elif ord('a') <= c <= ord('z') or ord('A') <= c <= ord('Z'):
+        elif not isover and ord('a') <= c <= ord('z') or ord('A') <= c <= ord('Z'):
           newx = c - (ord('a') if ord('a') <= c <= ord('z') else ord('A'))
           if 0 <= newx < self.compboard.w:
             crsx = newx
-        elif c == ord(' ') or c == ord('\n'):
-          usershots.append((crsy, crsx))
+        elif not isover and c == ord(' ') or c == ord('\n'):
+          self.compboard.shot(crsy, crsx)
+          if self.compboard.isover():
+            self.screen.addstr(1, 0, centered_str('You win!!!', self.w))
+            isover = True
+          else:
+            self._compshot()
+            if self.userboard.isover():
+              self.screen.addstr(1, 0, centered_str('You lose...r', self.w))
+              isover = True
         elif (
           c == ord(':') and
           self.execute_command(command_mode(self.screen, self.cmdln))
         ):
           break
-        self.screen.addstr(0, 0, str(c))
 
         if not savestack:
           digitstack.clear()
 
 
-    def draw_screen(self, usershots, compshots, crsy, crsx):
+    def draw_screen(self, crsy, crsx):
       bh, bw = self.userboard.required_size()
       vspace = (self.h - bh)
       vspaces = [ vspace - vspace // 2, vspace // 2 ]
@@ -159,7 +170,7 @@ class Game:
       self.userboard.draw(
          self.screen,
          vspaces[0], hspaces[0],
-         compshots, False
+         False
       )
 
       fill_rectangle(
@@ -170,7 +181,7 @@ class Game:
       self.compboard.draw(
          self.screen,
          vspaces[0], sum(hspaces[:2]) + bw,
-         usershots, True
+         True
       )
 
       crsy, crsx = self.userboard.board2screen(
@@ -179,6 +190,15 @@ class Game:
       )
 
       self.screen.chgat(crsy, crsx, 1, curses.color_pair(Color.CURSOR))
+
+
+    def _compshot(self):
+      probs = list(product(range(self.userboard.h), range(self.userboard.w)))
+      shuffle(probs)
+      for y, x, in probs:
+        if (y, x) not in self.userboard.shots:
+          self.userboard.shot(y, x)
+          break
 
 
     def _make_screen(self):

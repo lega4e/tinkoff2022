@@ -22,17 +22,34 @@ class Board:
   DOWNRIGHT        = '┘'
 
 
-  def __init__(self, h: int, w: int, ships: [ Ship ] = None):
+  def __init__(self, h: int, w: int, ships: [ Ship ] = []):
     self.w = w
     self.h = h
     if ships is not None:
       self.arrange_ships(ships)
     else:
       self.clear()
+    self.shots = []
 
 
   def clear(self):
     self._d = [ [Board.EMPTY] * self.w for i in range(self.h) ]
+
+
+  def clear_shots(self):
+    self.shots = []
+    for ship in self.ships:
+      ship.live = True
+
+
+  def shot(self, y: int, x: int):
+    self.shots.append((y, x))
+    for ship in self.ships:
+      if (y, x) not in ship:
+        continue
+      if all(map(lambda p: p in self.shots, ship.points())):
+        ship.live = False
+        self._round_ship(ship)
 
 
   def arrange_ships(self, ships: [ Ship ]):
@@ -41,81 +58,8 @@ class Board:
     self.clear()
     for i in range(1000):
       if all([ self._arrange_ship(ship) for ship in self.ships ]):
-        return True
+        return
     raise Exception("Error: can't arrange ships; try to increase board size")
-
-
-  def _check_ship(self, ship: Ship) -> bool:
-    my = ship.y if ship.hor else ship.y + ship.l - 1
-    mx = ship.x if not ship.hor else ship.x + ship.l - 1
-    if ship.x < 0 or mx >= self.w or ship.y < 0 or my >= self.h:
-      return False
-
-    for y in range(ship.y-1, my+2):
-      if y >= self.h:
-        break
-      for x in range(ship.x-1, mx+2):
-        if x >= self.w:
-          break
-        if self._d[y][x] != Board.EMPTY:
-          return False
-
-    return True
-
-
-  def _place_ship(self, ship: Ship):
-    if ship.hor:
-      for x in range(ship.x, ship.x+ship.l):
-        self._d[ship.y][x] = Board.SHIP
-    else:
-      for y in range(ship.y, ship.y+ship.l):
-        self._d[y][ship.x] = Board.SHIP
-
-
-  def _arrange_ship(self, ship: Ship) -> bool:
-    for i in range(self.w * self.h):
-      ship.y, ship.x = randint(0, self.h-1), randint(0, self.w-1)
-      ship.hor = randint(0, 1)
-      if self._check_ship(ship):
-        self._place_ship(ship)
-        return True
-    return False
-
-
-  def _is_kill(self, board, y, x):
-    if board[y][x] != Board.HURT:
-      return False
-    ways = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-    for way in ways:
-      yy, xx = y, x
-      while yy >= 0 and yy < self.h and xx >= 0 and xx < self.w:
-        if (
-          board[yy][xx] == Board.SHIP or
-          (board[yy][xx] == Board.EMPTY and self._d[yy][xx] == Board.SHIP)
-        ):
-          return False
-        if board[yy][xx] != Board.HURT:
-          break
-        yy += way[0]
-        xx += way[1]
-    return True
-
-
-  def _translate_board(self, shots, hide):
-    board = copy.deepcopy(self._d)
-    for y, x in shots:
-      if board[y][x] == Board.EMPTY:
-        board[y][x] = Board.MISS
-      elif board[y][x] == Board.SHIP:
-        board[y][x] = Board.HURT
-
-    if hide:
-      for y in range(self.h):
-        for x in range(self.w):
-          if board[y][x] == Board.SHIP:
-            board[y][x] = Board.EMPTY
-
-    return board
 
 
   def draw(
@@ -123,7 +67,6 @@ class Board:
     screen,
     y:     int,
     x:     int,
-    shots: [(int, int)],
     hide:  bool = False
   ):
     hsl = len(str(self.h))
@@ -135,7 +78,7 @@ class Board:
               Board.HORIZONTAL * (self.w * 2 - 1) + Board.TOPRIGHT
     )
 
-    board = self._translate_board(shots, hide)
+    board = self._translate_board(hide)
     for yy in range(self.h):
       screen.addstr(y+2+yy, x, '%*i' % (hsl, yy+1) + Board.VERTICAL)
       if Board.HURT not in board[yy]:
@@ -159,16 +102,6 @@ class Board:
     return
 
 
-  def tostr(self, shots: [(int, int)], hide: bool = False):
-    return '\n'.join(
-      [ ' ' + ' ' * hsl + ' '.join(Board.HORIZONTAL_SIGNS[:self.w]) + ' '] +
-      [ ' ' * hsl + Board.TOPLEFT + Board.HORIZONTAL * (self.w * 2 - 1) + Board.TOPRIGHT ] +
-      [ '%*i' % (hsl, y) + Board.VERTICAL + ' '.join(self._d[y-1]) + Board.VERTICAL
-        for y in range(1, self.h+1) ] +
-      [ ' ' * hsl + Board.DOWNLEFT + Board.HORIZONTAL * (self.w * 2 - 1) + Board.DOWNRIGHT ]
-    )
-
-
   def required_size(self):
     return self.h + 3, len(str(self.h)) + self.w * 2 + 2
 
@@ -179,3 +112,71 @@ class Board:
     winy: int = 0, winx: int = 0
   ) -> (int, int):
     return y + 2 + winy, x*2 + len(str(self.h)) + 1 + winx
+
+
+  def isover(self):
+    return all(map(lambda ship: not ship.live, self.ships))
+
+
+  def _round_ship(self, ship: Ship):
+    self.shots.extend(filter(
+      lambda p: p[0] >= 0 and p[0] < self.h and p[1] >= 0 and p[1] < self.w,
+      ship.bounds()
+    ))
+
+
+  def _check_ship(self, ship: Ship) -> bool:
+    my = ship.y if ship.hor else ship.y + ship.l - 1
+    mx = ship.x if not ship.hor else ship.x + ship.l - 1
+    if ship.x < 0 or mx >= self.w or ship.y < 0 or my >= self.h:
+      return False
+
+    for y in range(ship.y-1, my+2):
+      if y >= self.h:
+        break
+      for x in range(ship.x-1, mx+2):
+        if x >= self.w:
+          break
+        if self._d[y][x] != Board.EMPTY:
+          return False
+
+    return True
+
+
+  def _place_ship(self, ship: Ship):
+    for y, x in ship.points():
+      self._d[y][x] = Board.SHIP
+
+
+  def _arrange_ship(self, ship: Ship) -> bool:
+    for i in range(self.w * self.h):
+      ship.y, ship.x = randint(0, self.h-1), randint(0, self.w-1)
+      ship.hor = randint(0, 1)
+      if self._check_ship(ship):
+        self._place_ship(ship)
+        return True
+    return False
+
+
+  def _is_kill(self, board, y, x):
+    for ship in self.ships:
+      if (y, x) in ship:
+        return not ship.live
+    return False
+
+
+  def _translate_board(self, hide):
+    board = copy.deepcopy(self._d)
+    for y, x in self.shots:
+      if board[y][x] == Board.EMPTY:
+        board[y][x] = Board.MISS
+      elif board[y][x] == Board.SHIP:
+        board[y][x] = Board.HURT
+
+    if hide:
+      for y in range(self.h):
+        for x in range(self.w):
+          if board[y][x] == Board.SHIP:
+            board[y][x] = Board.EMPTY
+
+    return board

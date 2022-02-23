@@ -31,7 +31,10 @@ class Status:
       w = self.w - len(lines[-1]) - (1 if len(lines[-1]) != 0 else 0)
       ship = find_if(ships, lambda ship: ship.l <= w)
       if ship is not None:
-        lines[-1] += (' ' if len(lines[-1]) != 0 else '') + Status.SHIP * ship.l
+        lines[-1] += (
+          (' ' if len(lines[-1]) != 0 else '') +
+          (Status.SHIP if ship.live else Status.HURT) * ship.l
+        )
         ships.remove(ship)
         print(ships)
       else:
