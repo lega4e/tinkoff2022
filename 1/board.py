@@ -28,15 +28,13 @@ class Board:
     if ships is not None:
       self.arrange_ships(ships)
     else:
-      self.clear()
+      self._clear()
     self.shots = []
 
 
-  def clear(self):
+  def _clear(self):
     'Очистить поле полностью, в том числе корабли'
     self._d = [ [Board.EMPTY] * self.w for i in range(self.h) ]
-    self.ships = []
-    self.shots = []
 
 
   def clear_shots(self):
@@ -61,7 +59,7 @@ class Board:
     'Расставить переданные корабли'
     self.ships = sorted(ships, key=lambda s: s.l, reverse=True)
 
-    self.clear()
+    self._clear()
     for i in range(1000):
       if all([ self._arrange_ship(ship) for ship in self.ships ]):
         return
