@@ -49,7 +49,7 @@ class Game:
         raise Exception("Screen too small, try to increase screen size")
 
 
-    def execute_command(self, cmd: Command) -> bool:
+    def _execute_command(self, cmd: Command) -> bool:
       'Return True if need to quit program'
       if cmd.command == Command.QUIT:
         curses.endwin()
@@ -87,6 +87,7 @@ class Game:
 
 
     def run(self):
+      'Запустить основное меню игры'
       self.screen.addstr(0, 0, self.hello.tostr(self.h-1, self.w))
       self.screen.addstr(self.h-1, 0, self.cmdln.tostr_prompt(1, self.w))
       self.screen.keypad(True)
@@ -101,13 +102,14 @@ class Game:
           break
         elif key == ':':
           cmd = command_mode(self.screen, self.cmdln)
-          if self.execute_command(cmd):
+          if self._execute_command(cmd):
             break
           if cmd.command == Command.LOAD:
             run = True
 
 
     def run_game(self):
+      'Запустить саму игру'
       digitstack = []
       crsy, crsx = 0, 1
 
@@ -150,7 +152,7 @@ class Game:
               isover = True
         elif (
           c == ord(':') and
-          self.execute_command(command_mode(self.screen, self.cmdln))
+          self._execute_command(command_mode(self.screen, self.cmdln))
         ):
           break
 
@@ -159,6 +161,7 @@ class Game:
 
 
     def draw_screen(self, crsy, crsx):
+      'Нарисовать поля'
       bh, bw = self.userboard.required_size()
       vspace = (self.h - bh)
       vspaces = [ vspace - vspace // 2, vspace // 2 ]

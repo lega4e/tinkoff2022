@@ -33,16 +33,21 @@ class Board:
 
 
   def clear(self):
+    'Очистить поле полностью, в том числе корабли'
     self._d = [ [Board.EMPTY] * self.w for i in range(self.h) ]
+    self.ships = []
+    self.shots = []
 
 
   def clear_shots(self):
+    'Удалить все выстрелы'
     self.shots = []
     for ship in self.ships:
       ship.live = True
 
 
   def shot(self, y: int, x: int):
+    'Выстрелить по клетке'
     self.shots.append((y, x))
     for ship in self.ships:
       if (y, x) not in ship:
@@ -53,6 +58,7 @@ class Board:
 
 
   def arrange_ships(self, ships: [ Ship ]):
+    'Расставить переданные корабли'
     self.ships = sorted(ships, key=lambda s: s.l, reverse=True)
 
     self.clear()
@@ -69,6 +75,7 @@ class Board:
     x:     int,
     hide:  bool = False
   ):
+    'Отрисовать поле на экране screen в точке (y, x)'
     hsl = len(str(self.h))
     screen.addstr(
       y, x, ' ' + ' ' * hsl + ' '.join(Board.HORIZONTAL_SIGNS[:self.w]) + ' '
@@ -103,6 +110,7 @@ class Board:
 
 
   def required_size(self):
+    'Вернуть требуемый для корректной отрисовки размер'
     return self.h + 3, len(str(self.h)) + self.w * 2 + 2
 
 
@@ -111,10 +119,12 @@ class Board:
     y: int, x: int,
     winy: int = 0, winx: int = 0
   ) -> (int, int):
+    'Отобразить координаты доски на координаты окна, которое может быть смещено'
     return y + 2 + winy, x*2 + len(str(self.h)) + 1 + winx
 
 
   def isover(self):
+    'Провеить, что все коробли убиты'
     return all(map(lambda ship: not ship.live, self.ships))
 
 

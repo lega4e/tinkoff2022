@@ -12,16 +12,10 @@ def centered_str(s: str, w: int):
 
 
 def lefted_str(s: str, w: int):
+  'Возвращает строку, выравненную влево с помощью пробелов'
   return s + (w - len(s)) * ' '
 
 
 def righted_str(s: str, w: int):
+  'Возвращает строку, выравненную вправо с помощью пробелов'
   return str((w - len(s)) * ' ' + s)
-
-
-def centered_start(s: str, w: int):
-  """
-  Возвращает позицию по x, где нужно начать печатать
-  строку, чтобы она оказалось отцентрированной
-  """
-  return w // 2 - len(s) // 2 

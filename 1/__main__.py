@@ -1,23 +1,13 @@
-#!/usr/bin/python3
+#!python3
 
-import curses
 import typer
 
-from command import command_mode
-from cmdline import CmdLine
-from game    import Game
-from hello   import Hello
-from sys     import stderr
-from itertools import product
+from game import Game
 
 
 # init
 def main(height: int, width: int):
-  #  try:
   Game(height, width).run()
-  #  except Exception as e:
-    #  print(e, file=stderr)
-    #  exit(1)
   exit(0)
 
 

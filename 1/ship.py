@@ -10,6 +10,7 @@ class Ship:
     self.live = live
 
   def points(self):
+    'Итератор по всем клеткам, в которых есть корабль'
     y, x, = self.y, self.x
     for i in range(self.l):
       yield y, x
@@ -20,6 +21,7 @@ class Ship:
 
 
   def bounds(self):
+    'Итератор по всем клеткам в окресности корабля'
     if self.hor:
       for x in range(self.x-1, self.x+self.l+1):
         yield self.y-1, x
@@ -43,7 +45,7 @@ class Ship:
             x == self.x and self.y <= y < self.y + self.l)
 
 
-def get_probs_val(weights: dict):
+def _get_probs_val(weights: dict):
   choice = randint(1, sum(weights.keys()))
   for key, value in weights.items():
     choice -= value
@@ -53,6 +55,7 @@ def get_probs_val(weights: dict):
 
 
 def generate_ships(h: int, w: int):
+  'Сгенерировать корабли в соответствии с размерами поля'
   weights = dict()
   val = 1
 
@@ -65,7 +68,7 @@ def generate_ships(h: int, w: int):
   ships = []
 
   while k > 0:
-    ship = get_probs_val(weights)
+    ship = _get_probs_val(weights)
     if ship > k:
       continue
     k -= ship
