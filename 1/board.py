@@ -3,37 +3,7 @@ import curses
 
 from color  import Color
 from random import randint
-
-
-def get_probs_val(weights: dict):
-  choice = randint(1, sum(weights.keys()))
-  for key, value in weights.items():
-    choice -= value
-    if choice <= 0:
-      return key
-  raise Exception("Weights out of range")
-
-
-def generate_ships(h: int, w: int):
-  weights = dict()
-  val = 1
-
-  for l in range(min(7, w-1, h-1), 0, -1):
-    weights[l] = val
-    val += 1
-
-  sqrt = (w * h) ** 0.5
-  k = randint(int(sqrt * 1.8), int(sqrt * 2.2))
-  ships = []
-
-  while k > 0:
-    ship = get_probs_val(weights)
-    if ship > k:
-      continue
-    k -= ship
-    ships.append(ship)
-
-  return sorted(ships)
+from ship   import Ship
 
 
 
@@ -52,7 +22,7 @@ class Board:
   DOWNRIGHT        = '┘'
 
 
-  def __init__(self, h: int, w: int, ships: [ int ] = None):
+  def __init__(self, h: int, w: int, ships: [ Ship ] = None):
     self.w = w
     self.h = h
     if ships is not None:
@@ -65,8 +35,9 @@ class Board:
     self._d = [ [Board.EMPTY] * self.w for i in range(self.h) ]
 
 
-  def arrange_ships(self, ships: [ int ]):
-    self.ships = sorted(ships, reverse=True)
+  def arrange_ships(self, ships: [ Ship ]):
+    self.ships = sorted(ships, key=lambda s: s.l, reverse=True)
+
     self.clear()
     for i in range(1000):
       if all([ self._arrange_ship(ship) for ship in self.ships ]):
@@ -74,39 +45,39 @@ class Board:
     raise Exception("Error: can't arrange ships; try to increase board size")
 
 
-  def _check_ship(self, y: int, x: int, hor: bool, ship: int) -> bool:
-    my = y if hor else y + ship - 1
-    mx = x if not hor else x + ship - 1
-    if x < 0 or mx >= self.w or y < 0 or my >= self.h:
+  def _check_ship(self, ship: Ship) -> bool:
+    my = ship.y if ship.hor else ship.y + ship.l - 1
+    mx = ship.x if not ship.hor else ship.x + ship.l - 1
+    if ship.x < 0 or mx >= self.w or ship.y < 0 or my >= self.h:
       return False
 
-    for yy in range(y-1, my+2):
-      if yy >= self.h:
+    for y in range(ship.y-1, my+2):
+      if y >= self.h:
         break
-      for xx in range(x-1, mx+2):
-        if xx >= self.w:
+      for x in range(ship.x-1, mx+2):
+        if x >= self.w:
           break
-        if self._d[yy][xx] != Board.EMPTY:
+        if self._d[y][x] != Board.EMPTY:
           return False
 
     return True
 
 
-  def _place_ship(self, y: int, x: int, hor: bool, ship: int):
-    if hor:
-      for xx in range(x, x+ship):
-        self._d[y][xx] = Board.SHIP
+  def _place_ship(self, ship: Ship):
+    if ship.hor:
+      for x in range(ship.x, ship.x+ship.l):
+        self._d[ship.y][x] = Board.SHIP
     else:
-      for yy in range(y, y+ship):
-        self._d[yy][x] = Board.SHIP
+      for y in range(ship.y, ship.y+ship.l):
+        self._d[y][ship.x] = Board.SHIP
 
 
-  def _arrange_ship(self, ship: int) -> bool:
-    for i in range(50):
-      y, x = randint(0, self.h-1), randint(0, self.w-1)
-      hor = randint(0, 1)
-      if self._check_ship(y, x, hor, ship):
-        self._place_ship(y, x, hor, ship)
+  def _arrange_ship(self, ship: Ship) -> bool:
+    for i in range(self.w * self.h):
+      ship.y, ship.x = randint(0, self.h-1), randint(0, self.w-1)
+      ship.hor = randint(0, 1)
+      if self._check_ship(ship):
+        self._place_ship(ship)
         return True
     return False
 

@@ -3,7 +3,6 @@
 import curses
 import typer
 
-from board   import Board, generate_ships
 from command import command_mode
 from cmdline import CmdLine
 from game    import Game

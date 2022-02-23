@@ -3,11 +3,14 @@ import pickle
 
 from random import randint
 
-from board   import Board, generate_ships
+from board   import Board
+from cmdline import CmdLine
 from color   import Color, init_colors
 from command import Command, command_mode
-from cmdline import CmdLine
+from copy    import deepcopy
 from hello   import Hello
+from ship    import Ship, generate_ships
+from status  import Status
 
 
 def _mod(a: int, b: int) -> int:
@@ -29,7 +32,7 @@ def fill_rectangle(screen, y, x, h, w, *, sym = ' '):
 class Game:
     def __init__(self, height, width):
       ships = generate_ships(height, width)
-      self.userboard = Board(height, width, ships)
+      self.userboard = Board(height, width, deepcopy(ships))
       self.compboard = Board(height, width, ships)
       self.screen = self._make_screen()
       init_colors()
@@ -80,7 +83,6 @@ class Game:
           self.cmdln.answer(1, self.w, 'Game saved')
         )
       return False
-
 
 
     def run(self):
@@ -160,7 +162,10 @@ class Game:
          compshots, False
       )
 
-      fill_rectangle(self.screen, vspaces[0], hspaces[0] + bw, bh, hspaces[1])
+      fill_rectangle(
+         self.screen, vspaces[0], hspaces[0] + bw - 1,
+         bh, hspaces[1] + 1
+      )
 
       self.compboard.draw(
          self.screen,
@@ -196,5 +201,3 @@ class Game:
       bh, bw = self.userboard.required_size()
       ch, cw = self.cmdln.required_size()
       return bh + ch <= self.h and max(cw, bw*2 + 3) <= self.w
-
-
