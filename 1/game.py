@@ -10,7 +10,6 @@ from itertools import product
 from random import randint, shuffle
 from ship import Ship, generate_ships
 from status import Status
-from utils import centered_str
 
 
 def _mod(a: int, b: int) -> int:
@@ -104,7 +103,7 @@ class Game:
                 self.adapter.quit()
                 break
             elif key == ":":
-                cmd = fetch_command(self.screen, self.cmdln)
+                cmd = fetch_command(self.adapter, self.cmdln)
                 if self._execute_command(cmd):
                     break
                 if cmd.command == Command.LOAD:
@@ -146,15 +145,15 @@ class Game:
             elif not isover and c == ord(" ") or c == ord("\n"):
                 self.compboard.shot(crsy, crsx)
                 if self.compboard.isover():
-                    self.screen.addstr(1, 0, centered_str("You win!!!", self.w))
+                    self.screen.addstr(1, 0, "You win!!!".center(self.w, ' '))
                     isover = True
                 else:
                     self._compshot()
                     if self.userboard.isover():
-                        self.screen.addstr(1, 0, centered_str("You lose...r", self.w))
+                        self.screen.addstr(1, 0, "You lose...r".center(self.w, ' '))
                         isover = True
             elif c == ord(":") and self._execute_command(
-                fetch_command(self.screen, self.cmdln)
+                fetch_command(self.adapter, self.cmdln)
             ):
                 break
 

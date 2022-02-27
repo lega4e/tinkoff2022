@@ -2,7 +2,6 @@ import curses
 
 from curses_adapter import CursesAdapter
 from cmdline import CmdLine
-from utils import lefted_str
 
 
 class Command:
@@ -50,7 +49,7 @@ def fetch_command(adapter: CursesAdapter, cmdline: CmdLine) -> Command:
             " Error: should be file name"
         )
         com.command = Command.ERROR
-        screen.addstr(h - 1, 0, lefted_str(error, w))
+        screen.addstr(h - 1, 0, error.ljust(w, ' '))
 
     adapter.game_mode()
     return com

@@ -1,6 +1,3 @@
-from utils import centered_str
-
-
 class Hello:
     def __init__(self, h, w):
         self.hello = "Welcome to the sea battle game"
@@ -13,8 +10,8 @@ class Hello:
     def tostr(self, h, w):
         lines = [""] * h
         if h < 8:
-            lines[0] = centered_str(self.hello, w)
+            lines[0] = self.hello.center(w, ' ')
         else:
-            lines[1] = centered_str(self.hello, w)
-        lines[h // 2] = centered_str(self.prompt, w)
+            lines[1] = self.hello.center(w, ' ')
+        lines[h//2] = self.prompt.center(w, ' ')
         return "\n".join(lines)

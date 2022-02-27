@@ -1,6 +1,3 @@
-from utils import lefted_str, righted_str
-
-
 class CmdLine:
     def __init__(self):
         self.prompt = "Type ':' to enter command line"
@@ -11,15 +8,15 @@ class CmdLine:
 
     def tostr_prompt(self, h, w):
         lines = [""] * h
-        lines[-1] = righted_str(self.prompt, w)
+        lines[-1] = self.prompt.rjust(w, ' ')
         return "\n".join(lines)
 
     def tostr_hint(self, h, w):
         lines = [""] * h
-        lines[-1] = ":" + righted_str(self.hint, w - 1)
+        lines[-1] = ":" + self.hint.rjust(w - 1, ' ')
         return "\n".join(lines)
 
     def answer(self, h, w, ans):
         lines = [""] * h
-        lines[-1] = " " + lefted_str(ans, w - 1)
+        lines[-1] = " " + ans.ljust(w - 1, ' ')
         return "\n".join(lines)
