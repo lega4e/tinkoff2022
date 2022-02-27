@@ -142,15 +142,7 @@ class Game:
                 if 0 <= newx < self.compboard.w:
                     crsx = newx
             elif not is_over and c == ord(" ") or c == ord("\n"):
-                self.compboard.shot(crsy, crsx)
-                if self.compboard.is_over():
-                    self.screen.addstr(1, 0, "You win!!!".center(self.w, ' '))
-                    is_over = True
-                else:
-                    self._compshot()
-                    if self.userboard.is_over():
-                        self.screen.addstr(1, 0, "You lose...r".center(self.w, ' '))
-                        is_over = True
+                is_over = self._turn(crsy, crsx)
             elif c == ord(":") and self._execute_command(
                 fetch_command(self.adapter, self.cmdln)
             ):
@@ -184,13 +176,27 @@ class Game:
 
         self.screen.chgat(crsy, crsx, 1, curses.color_pair(Color.CURSOR))
 
-    def _compshot(self):
+    def _turn(self, crsy, crsx) -> bool:
+        'Возвращает True, если игра окончена'
+        if self.compboard.shot(crsy, crsx):
+            if self.compboard.is_over():
+                self.screen.addstr(1, 0, "You win!!!".center(self.w, ' '))
+                return True
+        else:
+            while self._compshot():
+                if self.userboard.is_over():
+                    self.screen.addstr(1, 0, "You lose...r".center(self.w, ' '))
+                    return True
+        return False
+
+
+    def _compshot(self) -> bool:
         probs = list(product(range(self.userboard.h), range(self.userboard.w)))
         shuffle(probs)
         for (y, x) in probs:
             if (y, x) not in self.userboard.shots:
-                self.userboard.shot(y, x)
-                break
+                return self.userboard.shot(y, x)
+        raise Exception("Error: no space to shot")
 
     def _check_menu_required_size(self) -> bool:
         hh, hw = self.hello.required_size()

@@ -40,7 +40,7 @@ class Board:
         for ship in self.ships:
             ship.live = True
 
-    def shot(self, y: int, x: int):
+    def shot(self, y: int, x: int) -> bool:
         "Выстрелить по клетке"
         self.shots.append((y, x))
         for ship in self.ships:
@@ -49,6 +49,8 @@ class Board:
             if all(map(lambda p: p in self.shots, ship.points())):
                 ship.live = False
                 self._round_ship(ship)
+            return True
+        return False
 
     def arrange_ships(self, ships: [Ship]):
         "Расставить переданные корабли"
