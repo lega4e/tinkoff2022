@@ -9,7 +9,7 @@ class Ship:
         self.hor = hor
         self.live = live
 
-    def points(self):
+    def points(self) -> (int, int):
         "Итератор по всем клеткам, в которых есть корабль"
         y, x, = (
             self.y,
@@ -22,7 +22,7 @@ class Ship:
             else:
                 y += 1
 
-    def bounds(self):
+    def bounds(self) -> (int, int):
         "Итератор по всем клеткам в окресности корабля"
         if self.hor:
             for x in range(self.x - 1, self.x + self.l + 1):
@@ -57,7 +57,7 @@ def _get_probs_val(weights: dict):
     raise Exception("Weights out of range")
 
 
-def generate_ships(h: int, w: int):
+def generate_ships(h: int, w: int) -> [ Ship ]:
     "Сгенерировать корабли в соответствии с размерами поля"
     weights = dict()
     val = 1
@@ -77,4 +77,7 @@ def generate_ships(h: int, w: int):
         k -= ship
         ships.append(ship)
 
-    return map(lambda l: Ship(0, 0, l, True, True), sorted(ships, reverse=True))
+    return list(map(
+        lambda l: Ship(0, 0, l, True, True),
+        sorted(ships, reverse=True)
+    ))

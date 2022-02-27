@@ -103,15 +103,20 @@ class Board:
         )
         return
 
-    def required_size(self):
+    def required_size(self) -> (int, int):
         "Вернуть требуемый для корректной отрисовки размер"
         return self.h + 3, len(str(self.h)) + self.w * 2 + 2
 
-    def board_to_screen(self, y: int, x: int, winy: int = 0, winx: int = 0) -> (int, int):
+    def board_to_screen(
+        self,
+        y: int, x: int,
+        winy: int = 0,
+        winx: int = 0
+    ) -> (int, int):
         "Отобразить координаты доски на координаты окна, которое может быть смещено"
         return y + 2 + winy, x * 2 + len(str(self.h)) + 1 + winx
 
-    def is_over(self):
+    def is_over(self) -> bool:
         "Провеить, что все коробли убиты"
         return all(map(lambda ship: not ship.live, self.ships))
 
@@ -153,13 +158,13 @@ class Board:
                 return True
         return False
 
-    def _is_kill(self, board, y, x):
+    def _is_kill(self, board, y, x) -> bool:
         for ship in self.ships:
             if (y, x) in ship:
                 return not ship.live
         return False
 
-    def _translate_board(self, hide):
+    def _translate_board(self, hide) -> [[str]]:
         board = copy.deepcopy(self._d)
         for y, x in self.shots:
             if board[y][x] == Board.EMPTY:

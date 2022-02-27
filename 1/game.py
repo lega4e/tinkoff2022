@@ -7,9 +7,8 @@ from copy import deepcopy
 from curses_adapter import CursesAdapter, Color
 from hello import Hello
 from itertools import product
-from random import randint, shuffle
-from ship import Ship, generate_ships
-from status import Status
+from random import shuffle
+from ship import generate_ships
 
 
 def _mod(a: int, b: int) -> int:
@@ -188,20 +187,17 @@ class Game:
     def _compshot(self):
         probs = list(product(range(self.userboard.h), range(self.userboard.w)))
         shuffle(probs)
-        for (
-            y,
-            x,
-        ) in probs:
+        for (y, x) in probs:
             if (y, x) not in self.userboard.shots:
                 self.userboard.shot(y, x)
                 break
 
-    def _check_menu_required_size(self):
+    def _check_menu_required_size(self) -> bool:
         hh, hw = self.hello.required_size()
         ch, cw = self.cmdln.required_size()
         return hh + ch <= self.h and max(hw, cw) <= self.w
 
-    def _check_game_required_size(self):
+    def _check_game_required_size(self) -> bool:
         bh, bw = self.userboard.required_size()
         ch, cw = self.cmdln.required_size()
         return bh + ch <= self.h and max(cw, bw * 2 + 3) <= self.w

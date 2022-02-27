@@ -4,10 +4,10 @@ class Hello:
         self.prompt = "Tap Enter to start (%ix%i)" % (w, h)
         pass
 
-    def required_size(self):
+    def required_size(self) -> (int, int):
         return 2, max(len(self.hello), len(self.prompt))
 
-    def tostr(self, h, w):
+    def tostr(self, h, w) -> str:
         lines = [""] * h
         if h < 8:
             lines[0] = self.hello.center(w, ' ')

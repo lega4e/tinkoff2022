@@ -3,20 +3,20 @@ class CmdLine:
         self.prompt = "Type ':' to enter command line"
         self.hint = "Commands: quit, save <name>, load <name>"
 
-    def required_size(self):
+    def required_size(self) -> (int, int):
         return 1, max(len(self.prompt), int(len(self.hint) * 1.5))
 
-    def tostr_prompt(self, h, w):
+    def tostr_prompt(self, h, w) -> str:
         lines = [""] * h
         lines[-1] = self.prompt.rjust(w, ' ')
         return "\n".join(lines)
 
-    def tostr_hint(self, h, w):
+    def tostr_hint(self, h, w) -> str:
         lines = [""] * h
         lines[-1] = ":" + self.hint.rjust(w - 1, ' ')
         return "\n".join(lines)
 
-    def answer(self, h, w, ans):
+    def answer(self, h, w, ans) -> str:
         lines = [""] * h
         lines[-1] = " " + ans.ljust(w - 1, ' ')
         return "\n".join(lines)
