@@ -115,20 +115,20 @@ class Game:
         digitstack = []
         crsy, crsx = 0, 0
 
-        isover = False
+        is_over = False
         while True:
             self.draw_screen(crsy, crsx)
             c = self.screen.getch()
             savestack = False
-            if not isover and c == curses.KEY_LEFT:
+            if not is_over and c == curses.KEY_LEFT:
                 crsx = _mod(crsx - 1, self.compboard.w)
-            elif not isover and c == curses.KEY_RIGHT:
+            elif not is_over and c == curses.KEY_RIGHT:
                 crsx = _mod(crsx + 1, self.compboard.w)
-            elif not isover and c == curses.KEY_UP:
+            elif not is_over and c == curses.KEY_UP:
                 crsy = _mod(crsy - 1, self.compboard.h)
-            elif not isover and c == curses.KEY_DOWN:
+            elif not is_over and c == curses.KEY_DOWN:
                 crsy = _mod(crsy + 1, self.compboard.h)
-            elif not isover and ord("0") <= c <= ord("9"):
+            elif not is_over and ord("0") <= c <= ord("9"):
                 savestack = True
                 d = c - ord("0")
                 digitstack.append(d)
@@ -138,20 +138,20 @@ class Game:
                     newy = d - 1
                 if 0 <= newy < self.userboard.h:
                     crsy = newy
-            elif not isover and ord("a") <= c <= ord("z") or ord("A") <= c <= ord("Z"):
+            elif not is_over and ord("a") <= c <= ord("z") or ord("A") <= c <= ord("Z"):
                 newx = c - (ord("a") if ord("a") <= c <= ord("z") else ord("A"))
                 if 0 <= newx < self.compboard.w:
                     crsx = newx
-            elif not isover and c == ord(" ") or c == ord("\n"):
+            elif not is_over and c == ord(" ") or c == ord("\n"):
                 self.compboard.shot(crsy, crsx)
-                if self.compboard.isover():
+                if self.compboard.is_over():
                     self.screen.addstr(1, 0, "You win!!!".center(self.w, ' '))
-                    isover = True
+                    is_over = True
                 else:
                     self._compshot()
-                    if self.userboard.isover():
+                    if self.userboard.is_over():
                         self.screen.addstr(1, 0, "You lose...r".center(self.w, ' '))
-                        isover = True
+                        is_over = True
             elif c == ord(":") and self._execute_command(
                 fetch_command(self.adapter, self.cmdln)
             ):
@@ -179,7 +179,7 @@ class Game:
 
         self.compboard.draw(self.screen, vspaces[0], sum(hspaces[:2]) + bw, True)
 
-        crsy, crsx = self.userboard.board2screen(
+        crsy, crsx = self.userboard.board_to_screen(
             crsy, crsx, vspaces[0], sum(hspaces[:2]) + bw
         )
 
