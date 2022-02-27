@@ -57,27 +57,22 @@ def _get_probs_val(weights: dict):
     raise Exception("Weights out of range")
 
 
+DENSITY = 0.2
+
 def generate_ships(h: int, w: int) -> [ Ship ]:
     "Сгенерировать корабли в соответствии с размерами поля"
-    weights = dict()
-    val = 1
-
-    for l in range(min(7, w - 1, h - 1), 0, -1):
-        weights[l] = val
-        val += 1
-
-    sqrt = (w * h) ** 0.5
-    k = randint(int(sqrt * 1.8), int(sqrt * 2.2))
+    ship_cell_count = max(int(w * h * DENSITY), 1)
+    longest_ship = 0
     ships = []
-
-    while k > 0:
-        ship = _get_probs_val(weights)
-        if ship > k:
-            continue
-        k -= ship
-        ships.append(ship)
-
+    while ship_cell_count > 0:
+        for i in range(1, longest_ship + 2):
+            if ship_cell_count - i >= 0:
+                ships.append(i)
+                ship_cell_count -= i
+                longest_ship = max(longest_ship, i)
+            else:
+                break
     return list(map(
-        lambda l: Ship(0, 0, l, True, True),
-        sorted(ships, reverse=True)
+        lambda ship: Ship(0, 0, ship, True, True),
+        ships
     ))
