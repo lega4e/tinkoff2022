@@ -141,7 +141,7 @@ class Game:
                 newx = c - (ord("a") if ord("a") <= c <= ord("z") else ord("A"))
                 if 0 <= newx < self.compboard.w:
                     crsx = newx
-            elif not is_over and c == ord(" ") or c == ord("\n"):
+            elif not is_over and (c == ord(" ") or c == ord("\n")) and (crsy, crsx) not in self.compboard.shots:
                 is_over = self._turn(crsy, crsx)
             elif c == ord(":") and self._execute_command(
                 fetch_command(self.adapter, self.cmdln)
