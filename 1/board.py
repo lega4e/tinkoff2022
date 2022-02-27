@@ -1,14 +1,13 @@
 import copy
 import curses
 
-from color import Color
+from curses_adapter import Color
 from random import randint
 from ship import Ship
 
 
 class Board:
     HORIZONTAL_SIGNS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    MAX_W = len(HORIZONTAL_SIGNS)
     EMPTY = " "
     SHIP = "■"
     HURT = "X"
@@ -20,7 +19,9 @@ class Board:
     DOWNLEFT = "└"
     DOWNRIGHT = "┘"
 
-    def __init__(self, h: int, w: int, ships: [Ship] = []):
+    def __init__(self, h: int, w: int, ships: [Ship] = None):
+        if ships is None:
+            ships  = []
         self.w = w
         self.h = h
         if ships is not None:
@@ -86,7 +87,7 @@ class Board:
                             y + 2 + yy,
                             x + hsl + 1 + xx * 2,
                             board[yy][xx],
-                            curses.color_pair(Color.RED),
+                            curses.color_pair(Color.KILL),
                         )
                     else:
                         screen.addch(y + 2 + yy, x + hsl + 1 + xx * 2, board[yy][xx])

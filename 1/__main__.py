@@ -2,11 +2,13 @@
 
 import typer
 
+from curses_adapter import CursesAdapter
 from game import Game
 
 
 def main(height: int, width: int):
-    Game(height, width).run()
+    adapter = CursesAdapter()
+    Game(adapter, height, width).run()
     exit(0)
 
 

@@ -1,14 +1,13 @@
-import curses
 import pickle
 
-from random import randint, shuffle
 from board import Board
 from cmdline import CmdLine
-from color import Color, init_colors
-from command import Command, command_mode
+from command import Command, fetch_command
 from copy import deepcopy
+from curses_adapter import CursesAdapter, Color
 from hello import Hello
 from itertools import product
+from random import randint, shuffle
 from ship import Ship, generate_ships
 from status import Status
 from utils import centered_str
@@ -25,31 +24,32 @@ def _stack2num(stack: [int]) -> int:
     return val
 
 
-def fill_rectangle(screen, y, x, h, w, *, sym=" "):
+def _fill_rectangle(screen, y, x, h, w, *, sym=" "):
     for yy in range(y, y + h):
         screen.addstr(yy, x, sym * w)
 
 
 class Game:
-    def __init__(self, height, width):
+    def __init__(self, adapter: CursesAdapter, height: int, width: int):
         ships = generate_ships(height, width)
         self.userboard = Board(height, width, deepcopy(ships))
         self.compboard = Board(height, width, ships)
-        self.screen = self._make_screen()
-        init_colors()
+        self.adapter = adapter
+        self.adapter.game_mode()
+        self.screen = self.adapter.get_screen()
         self.h, self.w = self.screen.getmaxyx()
         self.w -= 1
         self.hello = Hello(height, width)
         self.cmdln = CmdLine()
 
         if not self._check_menu_required_size() or not self._check_game_required_size():
-            curses.endwin()
+            self.adapter.quit()
             raise Exception("Screen too small, try to increase screen size")
 
     def _execute_command(self, cmd: Command) -> bool:
         "Return True if need to quit program"
         if cmd.command == Command.QUIT:
-            curses.endwin()
+            self.adapter.quit()
             return True
         elif cmd.command == Command.LOAD:
             try:
@@ -101,10 +101,10 @@ class Game:
                 key = self.screen.getkey()
             if run or key == "\n":
                 self.run_game()
-                curses.endwin()
+                self.adapter.quit()
                 break
             elif key == ":":
-                cmd = command_mode(self.screen, self.cmdln)
+                cmd = fetch_command(self.screen, self.cmdln)
                 if self._execute_command(cmd):
                     break
                 if cmd.command == Command.LOAD:
@@ -112,6 +112,7 @@ class Game:
 
     def run_game(self):
         "Запустить саму игру"
+        curses = self.adapter.get_curses()
         digitstack = []
         crsy, crsx = 0, 0
 
@@ -153,7 +154,7 @@ class Game:
                         self.screen.addstr(1, 0, centered_str("You lose...r", self.w))
                         isover = True
             elif c == ord(":") and self._execute_command(
-                command_mode(self.screen, self.cmdln)
+                fetch_command(self.screen, self.cmdln)
             ):
                 break
 
@@ -162,6 +163,7 @@ class Game:
 
     def draw_screen(self, crsy, crsx):
         "Нарисовать поля"
+        curses = self.adapter.get_curses()
         bh, bw = self.userboard.required_size()
         vspace = self.h - bh
         vspaces = [vspace - vspace // 2, vspace // 2]
@@ -174,7 +176,7 @@ class Game:
 
         self.userboard.draw(self.screen, vspaces[0], hspaces[0], False)
 
-        fill_rectangle(self.screen, vspaces[0], hspaces[0] + bw - 1, bh, hspaces[1] + 1)
+        _fill_rectangle(self.screen, vspaces[0], hspaces[0] + bw - 1, bh, hspaces[1] + 1)
 
         self.compboard.draw(self.screen, vspaces[0], sum(hspaces[:2]) + bw, True)
 
@@ -194,15 +196,6 @@ class Game:
             if (y, x) not in self.userboard.shots:
                 self.userboard.shot(y, x)
                 break
-
-    def _make_screen(self):
-        screen = curses.initscr()
-        curses.cbreak()
-        curses.noecho()
-        curses.curs_set(0)
-        screen.keypad(True)
-        curses.start_color()
-        return screen
 
     def _check_menu_required_size(self):
         hh, hw = self.hello.required_size()

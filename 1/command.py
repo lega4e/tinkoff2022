@@ -1,5 +1,6 @@
 import curses
 
+from curses_adapter import CursesAdapter
 from cmdline import CmdLine
 from utils import lefted_str
 
@@ -18,14 +19,14 @@ class Command:
         return f"<Command {self.command} {self.arg}>"
 
 
-def command_mode(screen, cmdline: CmdLine):
+def fetch_command(adapter: CursesAdapter, cmdline: CmdLine) -> Command:
+    screen = adapter.get_screen()
     h, w = screen.getmaxyx()
     w -= 1
 
     screen.addstr(h - 1, 0, cmdline.tostr_hint(1, w))
-    curses.echo()
-    curses.curs_set(1)
     screen.move(h - 1, 1)
+    adapter.command_mode()
 
     inp = screen.getstr().decode().strip()
     p = inp.find(" ")
@@ -45,13 +46,11 @@ def command_mode(screen, cmdline: CmdLine):
     ):
         error = (
             " Error: unknown command"
-            if com.command == Command.ERROR
-            else " Error: should be file name"
+            if com.command == Command.ERROR else
+            " Error: should be file name"
         )
         com.command = Command.ERROR
         screen.addstr(h - 1, 0, lefted_str(error, w))
 
-    curses.noecho()
-    curses.curs_set(0)
-
+    adapter.game_mode()
     return com
