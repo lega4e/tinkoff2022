@@ -98,7 +98,11 @@ class Game:
                 newx = c - (ord("a") if ord("a") <= c <= ord("z") else ord("A"))
                 if 0 <= newx < self.compboard.w:
                     crsx = newx
-            elif not is_over and (c == ord(" ") or c == ord("\n")) and (crsy, crsx) not in self.compboard.shots:
+            elif (
+                not is_over
+                and (c == ord(" ") or c == ord("\n"))
+                and (crsy, crsx) not in self.compboard.shots
+            ):
                 is_over = self._turn(crsy, crsx)
             elif c == ord(":") and self._execute_command(
                 fetch_command(self.adapter, self.cmdln)
@@ -123,7 +127,9 @@ class Game:
 
         self.userboard.draw(self.screen, vspaces[0], hspaces[0], False)
 
-        _fill_rectangle(self.screen, vspaces[0], hspaces[0] + bw - 1, bh, hspaces[1] + 1)
+        _fill_rectangle(
+            self.screen, vspaces[0], hspaces[0] + bw - 1, bh, hspaces[1] + 1
+        )
 
         self.compboard.draw(self.screen, vspaces[0], sum(hspaces[:2]) + bw, True)
 
@@ -181,18 +187,17 @@ class Game:
         self.screen.addstr(self.h - 1, 0, self.cmdln.answer(1, self.w, "Game saved"))
 
     def _turn(self, crsy, crsx) -> bool:
-        'Возвращает True, если игра окончена'
+        "Возвращает True, если игра окончена"
         if self.compboard.shot(crsy, crsx):
             if self.compboard.is_over():
-                self.screen.addstr(1, 0, "You win!!!".center(self.w, ' '))
+                self.screen.addstr(1, 0, "You win!!!".center(self.w, " "))
                 return True
         else:
             while self._compshot():
                 if self.userboard.is_over():
-                    self.screen.addstr(1, 0, "You lose...r".center(self.w, ' '))
+                    self.screen.addstr(1, 0, "You lose...r".center(self.w, " "))
                     return True
         return False
-
 
     def _compshot(self) -> bool:
         probs = list(product(range(self.userboard.h), range(self.userboard.w)))

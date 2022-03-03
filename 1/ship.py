@@ -59,7 +59,8 @@ def _get_probs_val(weights: dict):
 
 DENSITY = 0.2
 
-def generate_ships(h: int, w: int) -> [ Ship ]:
+
+def generate_ships(h: int, w: int) -> [Ship]:
     "Сгенерировать корабли в соответствии с размерами поля"
     ship_cell_count = max(int(w * h * DENSITY), 1)
     longest_ship = 0
@@ -72,7 +73,4 @@ def generate_ships(h: int, w: int) -> [ Ship ]:
                 longest_ship = max(longest_ship, i)
             else:
                 break
-    return list(map(
-        lambda ship: Ship(0, 0, ship, True, True),
-        ships
-    ))
+    return list(map(lambda ship: Ship(0, 0, ship, True, True), ships))

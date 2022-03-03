@@ -45,11 +45,11 @@ def fetch_command(adapter: CursesAdapter, cmdline: CmdLine) -> Command:
     ):
         error = (
             " Error: unknown command"
-            if com.command == Command.ERROR else
-            " Error: should be file name"
+            if com.command == Command.ERROR
+            else " Error: should be file name"
         )
         com.command = Command.ERROR
-        screen.addstr(h - 1, 0, error.ljust(w, ' '))
+        screen.addstr(h - 1, 0, error.ljust(w, " "))
 
     adapter.game_mode()
     return com

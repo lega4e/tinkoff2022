@@ -21,7 +21,7 @@ class Board:
 
     def __init__(self, h: int, w: int, ships: [Ship] = None):
         if ships is None:
-            ships  = []
+            ships = []
         self.w = w
         self.h = h
         if ships is not None:
@@ -110,10 +110,7 @@ class Board:
         return self.h + 3, len(str(self.h)) + self.w * 2 + 2
 
     def board_to_screen(
-        self,
-        y: int, x: int,
-        winy: int = 0,
-        winx: int = 0
+        self, y: int, x: int, winy: int = 0, winx: int = 0
     ) -> (int, int):
         "Отобразить координаты доски на координаты окна, которое может быть смещено"
         return y + 2 + winy, x * 2 + len(str(self.h)) + 1 + winx

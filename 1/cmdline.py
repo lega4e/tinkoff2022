@@ -8,15 +8,15 @@ class CmdLine:
 
     def tostr_prompt(self, h, w) -> str:
         lines = [""] * h
-        lines[-1] = self.prompt.rjust(w, ' ')
+        lines[-1] = self.prompt.rjust(w, " ")
         return "\n".join(lines)
 
     def tostr_hint(self, h, w) -> str:
         lines = [""] * h
-        lines[-1] = ":" + self.hint.rjust(w - 1, ' ')
+        lines[-1] = ":" + self.hint.rjust(w - 1, " ")
         return "\n".join(lines)
 
     def answer(self, h, w, ans) -> str:
         lines = [""] * h
-        lines[-1] = " " + ans.ljust(w - 1, ' ')
+        lines[-1] = " " + ans.ljust(w - 1, " ")
         return "\n".join(lines)

@@ -10,8 +10,8 @@ class Hello:
     def tostr(self, h, w) -> str:
         lines = [""] * h
         if h < 8:
-            lines[0] = self.hello.center(w, ' ')
+            lines[0] = self.hello.center(w, " ")
         else:
-            lines[1] = self.hello.center(w, ' ')
-        lines[h//2] = self.prompt.center(w, ' ')
+            lines[1] = self.hello.center(w, " ")
+        lines[h // 2] = self.prompt.center(w, " ")
         return "\n".join(lines)
