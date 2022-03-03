@@ -44,49 +44,6 @@ class Game:
             self.adapter.quit()
             raise Exception("Screen too small, try to increase screen size")
 
-    def _execute_command(self, cmd: Command) -> bool:
-        "Return True if need to quit program"
-        if cmd.command == Command.QUIT:
-            self.adapter.quit()
-            return True
-        elif cmd.command == Command.LOAD:
-            try:
-                (
-                    self.h,
-                    self.w,
-                    self.userboard,
-                    self.compboard,
-                    self.hello,
-                    self.cmdln,
-                ) = pickle.load(open(cmd.arg, "rb"))
-                self.screen.addstr(
-                    self.h - 1, 0, self.cmdln.answer(1, self.w, "Game loaded")
-                )
-            except Exception as e:
-                self.screen.addstr(
-                    self.h - 1,
-                    0,
-                    self.cmdln.answer(
-                        1, self.w, "Can't find file '%s' or invalid format" % cmd.arg
-                    ),
-                )
-        elif cmd.command == Command.SAVE:
-            pickle.dump(
-                (
-                    self.h,
-                    self.w,
-                    self.userboard,
-                    self.compboard,
-                    self.hello,
-                    self.cmdln,
-                ),
-                open(cmd.arg, "bw"),
-            )
-            self.screen.addstr(
-                self.h - 1, 0, self.cmdln.answer(1, self.w, "Game saved")
-            )
-        return False
-
     def run(self):
         "Запустить основное меню игры"
         self.screen.addstr(0, 0, self.hello.tostr(self.h - 1, self.w))
@@ -175,6 +132,53 @@ class Game:
         )
 
         self.screen.chgat(crsy, crsx, 1, curses.color_pair(Color.CURSOR))
+
+    def _execute_command(self, cmd: Command) -> bool:
+        "Return True if need to quit program"
+        if cmd.command == Command.QUIT:
+            self.adapter.quit()
+            return True
+        elif cmd.command == Command.LOAD:
+            self._load_game(cmd.arg)
+        elif cmd.command == Command.SAVE:
+            self._save_game(cmd.arg)
+        return False
+
+    def _load_game(self, filename):
+        try:
+            (
+                self.h,
+                self.w,
+                self.userboard,
+                self.compboard,
+                self.hello,
+                self.cmdln,
+            ) = pickle.load(open(filename, "rb"))
+            self.screen.addstr(
+                self.h - 1, 0, self.cmdln.answer(1, self.w, "Game loaded")
+            )
+        except Exception as e:
+            self.screen.addstr(
+                self.h - 1,
+                0,
+                self.cmdln.answer(
+                    1, self.w, "Can't find file '%s' or invalid format" % cmd.arg
+                ),
+            )
+
+    def _save_game(self, filename):
+        pickle.dump(
+            (
+                self.h,
+                self.w,
+                self.userboard,
+                self.compboard,
+                self.hello,
+                self.cmdln,
+            ),
+            open(filename, "bw"),
+        )
+        self.screen.addstr(self.h - 1, 0, self.cmdln.answer(1, self.w, "Game saved"))
 
     def _turn(self, crsy, crsx) -> bool:
         'Возвращает True, если игра окончена'
